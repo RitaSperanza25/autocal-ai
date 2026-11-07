@@ -3,224 +3,152 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AutoCal AI Engine</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+  <title>AutoCal AI</title>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
-    body { background-color: #f8fafc; font-family: 'Inter', sans-serif; }
+    :root {
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+    }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      background-color: var(--card-bg);
+      padding: 2rem;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 480px;
+    }
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+      color: var(--text);
+    }
+    p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-bottom: 1.5rem;
+    }
+    .auth-section {
+      margin-bottom: 1.5rem;
+      display: flex;
+      justify-content: center;
+    }
+    textarea {
+      width: 100%;
+      height: 100px;
+      padding: 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      resize: none;
+      font-family: inherit;
+      margin-bottom: 1rem;
+      box-sizing: border-box;
+    }
+    textarea:focus {
+      outline: 2px solid var(--primary);
+      border-color: transparent;
+    }
+    button.send-btn {
+      width: 100%;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    button.send-btn:hover {
+      background-color: var(--primary-hover);
+    }
+    #status {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      text-align: center;
+    }
   </style>
 </head>
-<body class="min-h-screen flex flex-col items-center p-4 sm:p-6 text-slate-800">
+<body>
 
-  <header class="w-full max-w-xl flex justify-between items-center py-4 mb-6 border-b border-slate-200">
-    <div class="flex items-center space-x-2">
-      <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">A</div>
-      <h1 class="text-xl font-bold tracking-tight text-slate-900">AutoCal AI</h1>
-    </div>
-    <button id="authBtn" onclick="handleAuth()" class="text-sm font-medium bg-white border border-slate-300 text-slate-700 px-4 py-2 rounded-lg shadow-sm hover:bg-slate-50 transition">
-      Connetti Google
-    </button>
-  </header>
+  <div class="container">
+    <h1>AutoCal AI</h1>
+    <p>Pianifica i tuoi eventi su Google Calendar inserendo frasi in linguaggio naturale.</p>
 
-  <main class="w-full max-w-xl bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-6">
-    <div>
-      <h2 class="text-lg font-semibold text-slate-900">Analizza Documento o Email</h2>
-      <p class="text-sm text-slate-500 mt-1">Carica un PDF o incolla il testo di un'email per generare l'evento su Google Calendar.</p>
-    </div>
-
-    <div class="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center hover:border-indigo-400 transition bg-slate-50/50">
-      <input type="file" id="pdfInput" accept="application/pdf" class="hidden" onchange="handleFileSelect(event)">
-      <label for="pdfInput" class="cursor-pointer flex flex-col items-center">
-        <svg class="w-10 h-10 text-indigo-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-        </svg>
-        <span class="text-sm font-medium text-slate-700" id="fileName">Seleziona o trascina un file PDF</span>
-        <span class="text-xs text-slate-400 mt-1">Supporta PDF nativi</span>
-      </label>
-    </div>
-
-    <div class="flex items-center my-2">
-      <div class="flex-grow border-t border-slate-200"></div>
-      <span class="px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Oppure</span>
-      <div class="flex-grow border-t border-slate-200"></div>
-    </div>
-
-    <div>
-      <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Testo dell'email / nota</label>
-      <textarea id="textInput" rows="4" placeholder="Es: Riunione di lavoro il 20/11/26 alle 16:00..." class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none transition"></textarea>
-    </div>
-
-    <button id="processBtn" onclick="processInput()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-xl shadow-sm transition flex items-center justify-center gap-2">
-      <span>Analizza con Gemini AI</span>
-    </button>
-
-    <div id="resultCard" class="hidden border border-indigo-100 bg-indigo-50/50 p-5 rounded-xl space-y-3">
-      <div class="flex justify-between items-start">
-        <h3 id="eventTitle" class="font-bold text-slate-900 text-base"></h3>
-        <span id="eventCategory" class="px-2 py-1 text-xs font-semibold bg-indigo-100 text-indigo-700 rounded-md"></span>
+    <div class="auth-section">
+      <div id="g_id_onload"
+           data-client_id="889306807585-ht7iah8qkpg0gj74id9qlv6st0bkre4p.apps.googleusercontent.com"
+           data-callback="handleCredentialResponse">
       </div>
-      <div class="text-sm text-slate-600 space-y-1">
-        <p>📅 <span id="eventDate" class="font-medium text-slate-800"></span></p>
-        <p>📍 <span id="eventLocation" class="font-medium text-slate-800"></span></p>
-      </div>
-
-      <button id="saveBtn" onclick="saveToGoogleCalendar()" class="w-full mt-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 rounded-lg shadow-sm transition text-sm">
-        Sincronizza su Google Calendar
-      </button>
+      <div class="g_id_signin" data-type="standard"></div>
     </div>
 
-    <div id="statusText" class="text-center text-xs font-medium text-slate-500 min-h-[20px]"></div>
-  </main>
+    <textarea id="prompt" placeholder="Es: Riunione di lavoro domani alle 15:00 con Marco..."></textarea>
+    <button class="send-btn" onclick="sendToAI()">Crea Evento</button>
+
+    <div id="status"></div>
+  </div>
 
   <script>
-    const BACKEND_URL = "https://autocal-backend.onrender.com"; // Modifica se il tuo URL su Render è diverso
-    let extractedText = "";
-    let parsedEventData = null;
-    let userAccessToken = null;
-    let tokenClient = null;
+    let userToken = null;
+    const BACKEND_URL = 'https://autocal-backend.onrender.com';
 
-    const GOOGLE_CLIENT_ID = "889306807585-ht7iah8qkpg0gj74id9qlv6st0bkre4p.apps.googleusercontent.com";
-
-    window.onload = () => {
-      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-
-      if (window.google) {
-        tokenClient = google.accounts.oauth2.initTokenClient({
-          client_id: GOOGLE_CLIENT_ID,
-          scope: 'https://www.googleapis.com/auth/calendar.events',
-          callback: (tokenResponse) => {
-            if (tokenResponse.access_token) {
-              userAccessToken = tokenResponse.access_token;
-              document.getElementById('authBtn').innerText = "Account Connesso ✓";
-              document.getElementById('authBtn').classList.replace('text-slate-700', 'text-emerald-700');
-              showStatus("Autenticato con successo su Google!");
-            }
-          },
-        });
-      }
-    };
-
-    function handleAuth() {
-      if (tokenClient) {
-        tokenClient.requestAccessToken();
-      } else {
-        alert("Librerie Google in caricamento, riprova tra qualche secondo.");
-      }
+    function handleCredentialResponse(response) {
+      userToken = response.credential;
+      document.getElementById('status').innerText = 'Accesso effettuato con successo!';
+      document.getElementById('status').style.color = 'green';
     }
 
-    async function handleFileSelect(event) {
-      const file = event.target.files[0];
-      if (!file) return;
+    async function sendToAI() {
+      const promptText = document.getElementById('prompt').value;
+      const statusDiv = document.getElementById('status');
 
-      document.getElementById('fileName').innerText = file.name;
-      showStatus("Lettura file PDF in corso...");
-
-      try {
-        const arrayBuffer = await file.arrayBuffer();
-        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-        let textContent = "";
-
-        for (let i = 1; i <= pdf.numPages; i++) {
-          const page = await pdf.getPage(i);
-          const content = await page.getTextContent();
-          textContent += content.items.map(item => item.str).join(" ") + "\n";
-        }
-
-        extractedText = textContent;
-        showStatus("PDF letto correttamente. Clicca su 'Analizza con Gemini AI'");
-      } catch (err) {
-        console.error("Errore lettura PDF:", err);
-        showStatus("Impossibile leggere il file PDF.", true);
-      }
-    }
-
-    async function processInput() {
-      const manualText = document.getElementById('textInput').value.trim();
-      const textToAnalyze = manualText || extractedText;
-
-      if (!textToAnalyze) {
-        showStatus("Inserisci del testo o carica un file PDF prima di procedere.", true);
+      if (!promptText) {
+        statusDiv.innerText = 'Inserisci un testo prima di inviare.';
+        statusDiv.style.color = 'red';
         return;
       }
 
-      showStatus("Analisi in corso con Gemini 1.5 Flash...");
-      document.getElementById('processBtn').disabled = true;
+      statusDiv.innerText = 'Elaborazione in corso... (potrebbe richiedere qualche secondo)';
+      statusDiv.style.color = 'blue';
 
       try {
-        const response = await fetch(`${BACKEND_URL}/api/parse-document`, {
+        const res = await fetch(`${BACKEND_URL}/api/parse-event`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ testoDocumento: textToAnalyze })
+          body: JSON.stringify({ prompt: promptText, token: userToken })
         });
-
-        const data = await response.json();
-
-        if (data.success && data.evento) {
-          parsedEventData = data.evento;
-          renderEventCard(parsedEventData);
-          showStatus("Analisi completata con successo!");
+        const data = await res.json();
+        
+        if (res.ok) {
+          statusDiv.innerText = 'Evento creato con successo su Google Calendar!';
+          statusDiv.style.color = 'green';
+          document.getElementById('prompt').value = '';
         } else {
-          showStatus("Errore nell'estrazione dei dati con l'AI.", true);
+          statusDiv.innerText = `Errore: ${data.message || 'Impossibile creare l\'evento.'}`;
+          statusDiv.style.color = 'red';
         }
       } catch (err) {
-        console.error("Errore chiamata backend:", err);
-        showStatus("Errore di connessione con il server backend.", true);
-      } finally {
-        document.getElementById('processBtn').disabled = false;
+        statusDiv.innerText = 'Errore di connessione al backend.';
+        statusDiv.style.color = 'red';
       }
-    }
-
-    function renderEventCard(evento) {
-      document.getElementById('eventTitle').innerText = evento.titolo || "Evento Senza Titolo";
-      document.getElementById('eventCategory').innerText = evento.categoria || "Generale";
-      document.getElementById('eventDate').innerText = evento.dataOra ? new Date(evento.dataOra).toLocaleString('it-IT') : "Data da definire";
-      document.getElementById('eventLocation').innerText = evento.luogo || "Nessun luogo specificato";
-      document.getElementById('resultCard').classList.remove('hidden');
-    }
-
-    async function saveToGoogleCalendar() {
-      if (!userAccessToken) {
-        alert("Prima devi connettere il tuo account Google cliccando in alto su 'Connetti Google'!");
-        handleAuth();
-        return;
-      }
-
-      if (!parsedEventData) return;
-
-      showStatus("Salvataggio dell'evento su Google Calendar...");
-
-      try {
-        const response = await fetch(`${BACKEND_URL}/api/add-to-google-calendar`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userAccessToken: userAccessToken,
-            evento: parsedEventData
-          })
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-          showStatus("Evento sincronizzato su Google Calendar! 🎉");
-          if (data.calendarLink) {
-            window.open(data.calendarLink, '_blank');
-          }
-        } else {
-          showStatus("Errore durante il salvataggio su Calendar.", true);
-        }
-      } catch (err) {
-        console.error(err);
-        showStatus("Errore di comunicazione con il server per Calendar.", true);
-      }
-    }
-
-    function showStatus(msg, isError = false) {
-      const el = document.getElementById('statusText');
-      el.innerText = msg;
-      el.className = `text-center text-xs font-medium ${isError ? 'text-red-500' : 'text-slate-500'}`;
     }
   </script>
+
 </body>
 </html>
